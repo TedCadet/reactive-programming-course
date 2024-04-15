@@ -7,6 +7,9 @@ import java.util.function.Consumer;
 
 public class Util {
 
+    private Util() {
+    }
+
     private static final Faker FAKER = Faker.instance();
 
     public static Faker getFaker() {
@@ -37,7 +40,7 @@ public class Util {
     }
 
     public static Runnable onComplete() {
-        return () -> System.out.printf("Done");
+        return () -> System.out.printf("Done%n");
     }
 
     public static void sleepSeconds(int seconds) {

@@ -2,63 +2,60 @@ package io.tedcadet.rp.sec01.services;
 
 import reactor.core.publisher.Mono;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 
 public class FileServiceImpl implements FileService {
+
+    private static final String BASE_FILE_NAME = "src/main/resources/assignment/sec01";
+
     @Override
     public Mono<String> readFile(String fileName) {
-        return Mono.fromCallable(fileReaderCallable(fileName));
+        return Mono.fromCallable(fileReaderCallable(BASE_FILE_NAME.concat(fileName)));
     }
 
     @Override
-    public Mono<Void> writeFile(String fileName, String content) {
-        return Mono.fromRunnable(fileWriterCallable(fileName, content));
+    public Mono<String> writeFile(String fileName, String content) {
+        return Mono.fromCallable(fileWriterCallable(BASE_FILE_NAME.concat(fileName), content));
     }
 
     @Override
-    public Mono<Void> deleteFile(String fileName) {
-        return null;
+    public Mono<String> deleteFile(String fileName) {
+        return Mono.fromCallable(deleteFileRunnable(BASE_FILE_NAME.concat(fileName)));
     }
 
     private Callable<String> fileReaderCallable(String fileName) {
         return () -> {
-            try {
-                FileReader fileReader = new FileReader(fileName);
-                BufferedReader bufferedReader = new BufferedReader(fileReader);
-                StringBuilder stringBuilder = new StringBuilder();
+            FileReader fileReader = new FileReader(fileName);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            StringBuilder stringBuilder = new StringBuilder();
 
-                bufferedReader
-                        .lines()
-                        .forEach(stringBuilder::append);
+            bufferedReader
+                    .lines()
+                    .forEach(line -> stringBuilder.append(line).append("\n"));
 
-                return stringBuilder.toString();
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
+            return stringBuilder.toString();
         };
     }
 
-    private Runnable fileWriterCallable(String fileName, String content) {
+    private Callable<String> fileWriterCallable(String fileName, String content) {
         return () -> {
-            try (FileWriter fileWriter = new FileWriter(fileName)) {
-                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-                bufferedWriter.write(content);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            FileWriter fileWriter = new FileWriter(fileName);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            bufferedWriter.write(content);
+            return "file writing success";
         };
     }
 
-    private Runnable deleteFileRunnable(String fileName) {
+    private Callable<String> deleteFileRunnable(String fileName) {
         return () -> {
-            try {
-                Files.delete(Paths.get(fileName));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            Files.delete(Paths.get(fileName));
+            return "delete success";
         };
     }
 }

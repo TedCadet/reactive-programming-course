@@ -2,12 +2,10 @@ package io.tedcadet.rp.sec01.services;
 
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-
 public interface FileService {
-    Mono<String> readFile(String fileName) throws IOException;
+    Mono<String> readFile(String fileName);
 
-    Mono<Void> writeFile(String fileName, String content);
+    Mono<String> writeFile(String fileName, String content);
 
-    Mono<Void> deleteFile(String fileName);
+    Mono<String> deleteFile(String fileName);
 }
