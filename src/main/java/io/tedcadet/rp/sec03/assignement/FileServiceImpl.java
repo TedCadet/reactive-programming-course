@@ -13,11 +13,11 @@ import java.util.function.BiFunction;
 public class FileServiceImpl implements FileService {
     @Override
     public Flux<String> readFile(String path) {
-        return Flux.generate(readerState(path), readFileSink(path))
+        return Flux.generate(readerState(path), readFileSink())
                 .onErrorStop();
     }
 
-    private BiFunction<BufferedReader, SynchronousSink<String>, BufferedReader> readFileSink(String path) {
+    private BiFunction<BufferedReader, SynchronousSink<String>, BufferedReader> readFileSink() {
         return (bufferedReader, synchronousSink) -> {
             try {
                 Optional.ofNullable(bufferedReader.readLine())
@@ -26,12 +26,12 @@ public class FileServiceImpl implements FileService {
                                     try {
                                         bufferedReader.close();
                                     } catch (IOException e) {
-                                        System.out.printf("Error while close the bufferedReader:%s%n", e.getCause());
+                                        synchronousSink.error(e);
                                     }
                                     synchronousSink.complete();
                                 });
             } catch (IOException e) {
-                System.out.printf("Error while reading the file: %s%n%s%n", path, e.getCause());
+                synchronousSink.error(e);
             }
 
             return bufferedReader;
