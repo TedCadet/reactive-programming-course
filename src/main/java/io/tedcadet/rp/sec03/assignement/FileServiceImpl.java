@@ -9,11 +9,14 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 public class FileServiceImpl implements FileService {
     @Override
     public Flux<String> readFile(String path) {
-        return Flux.generate(readerState(path), readFileSink())
+        return Flux.generate(readerState(path),
+                        readFileSink(),
+                        closeFileSink())
                 .onErrorStop();
     }
 
@@ -22,14 +25,7 @@ public class FileServiceImpl implements FileService {
             try {
                 Optional.ofNullable(bufferedReader.readLine())
                         .ifPresentOrElse(synchronousSink::next,
-                                () -> {
-                                    try {
-                                        bufferedReader.close();
-                                    } catch (IOException e) {
-                                        synchronousSink.error(e);
-                                    }
-                                    synchronousSink.complete();
-                                });
+                                synchronousSink::complete);
             } catch (IOException e) {
                 synchronousSink.error(e);
             }
@@ -40,5 +36,15 @@ public class FileServiceImpl implements FileService {
 
     private Callable<BufferedReader> readerState(String path) {
         return () -> new BufferedReader(new FileReader(path));
+    }
+
+    private Consumer<BufferedReader> closeFileSink() {
+        return bufferedReader -> {
+            try {
+                bufferedReader.close();
+            } catch (IOException e) {
+                System.out.printf("error while closing the bufferedReader: %s%n", e.getCause());
+            }
+        };
     }
 }
